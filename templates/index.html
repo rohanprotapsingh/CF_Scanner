@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CF Scanner - اسکنر کلادفلر</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
+</head>
+<body>
+<header class="header">
+    <div class="header-content">
+        <div class="logo">
+            <i class="fas fa-satellite-dish logo-icon"></i>
+            <div>
+                <h1>CF Scanner</h1>
+                <p>اسکنر پیشرفته آی‌پی کلادفلر</p>
+            </div>
+        </div>
+        <div class="header-links">
+            <a href="https://t.me/Net4All_None" target="_blank" class="social-link telegram">
+                <i class="fab fa-telegram"></i><span>Net4All</span>
+            </a>
+            <a href="https://github.com/rohanprotapsingh" target="_blank" class="social-link github">
+                <i class="fab fa-github"></i><span>GitHub</span>
+            </a>
+        </div>
+    </div>
+</header>
+
+<main class="container">
+    <!-- حالت اسکن -->
+    <section class="panel">
+        <div class="panel-header">
+            <i class="fas fa-exchange-alt"></i><h2>حالت اسکن</h2>
+        </div>
+        <div class="panel-body">
+            <div class="mode-selector">
+                <button class="mode-btn active" id="modeCleanIP" onclick="setMode('clean')">
+                    <i class="fas fa-broom"></i>
+                    <div><strong>اسکن آی‌پی تمیز</strong><small>بدون نیاز به کانفیگ</small></div>
+                </button>
+                <button class="mode-btn" id="modeVless" onclick="setMode('vless')">
+                    <i class="fas fa-link"></i>
+                    <div><strong>اسکن با کانفیگ VLESS / Trojan</strong><small>تست کامل - خروجی آماده</small></div>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- تنظیمات -->
+    <section class="panel">
+        <div class="panel-header"><i class="fas fa-cog"></i><h2>تنظیمات اسکن</h2></div>
+        <div class="panel-body">
+            <div class="form-group" id="vlessConfigGroup" style="display:none;">
+                <label><i class="fas fa-link"></i> کانفیگ VLESS / Trojan</label>
+                <textarea id="vlessConfig" rows="3"
+                    placeholder="vless://uuid@addr:port?params#name&#10;trojan://pass@addr:port?params#name"></textarea>
+            </div>
+
+            <div id="cleanModeSettings">
+                <div class="info-box">
+                    <i class="fas fa-info-circle"></i>
+                    <div><strong>حالت آی‌پی تمیز:</strong> نیازی به کانفیگ نیست! فقط بهترین آی‌پی‌ها رو پیدا می‌کنه.</div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label><i class="fas fa-door-open"></i> پورت</label>
+                        <select id="scanPort">
+                            <option value="443">443 (HTTPS)</option>
+                            <option value="80">80 (HTTP)</option>
+                            <option value="8443">8443</option>
+                            <option value="2053">2053</option>
+                            <option value="2083">2083</option>
+                            <option value="2087">2087</option>
+                            <option value="2096">2096</option>
+                            <option value="8080">8080</option>
+                            <option value="8880">8880</option>
+                            <option value="2052">2052</option>
+                            <option value="2082">2082</option>
+                            <option value="2086">2086</option>
+                            <option value="2095">2095</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-globe"></i> SNI</label>
+                        <input type="text" id="scanSNI" value="speed.cloudflare.com">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group checkbox-group">
+                        <label><input type="checkbox" id="testTLS" checked><span><i class="fas fa-lock"></i> تست TLS</span></label>
+                    </div>
+                    <div class="form-group checkbox-group">
+                        <label><input type="checkbox" id="testSpeed" checked><span><i class="fas fa-tachometer-alt"></i> تست سرعت</span></label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label><i class="fas fa-broadcast-tower"></i> اپراتور</label>
+                <select id="operatorSelect" onchange="onOperatorChange()">
+                    <optgroup label="🌐 عمومی">
+                        <option value="all">🌐 همه (کلادفلر)</option>
+                        <option value="custom">✏️ رنج سفارشی</option>
+                    </optgroup>
+                    <optgroup label="📱 موبایل">
+                        <option value="mci">📱 همراه اول</option>
+                        <option value="irancell">📱 ایرانسل</option>
+                        <option value="rightel">📱 رایتل</option>
+                        <option value="samantel">📱 سامانتل</option>
+                        <option value="aptel">📱 آپتل</option>
+                        <option value="shatelmobile">📱 شاتل موبایل</option>
+                    </optgroup>
+                    <optgroup label="🏢 ISP ثابت">
+                        <option value="mokhaberat">🏢 مخابرات</option>
+                        <option value="shatel">🏢 شاتل</option>
+                        <option value="hiweb">🏢 های وب</option>
+                        <option value="pishgaman">🏢 پیشگامان</option>
+                        <option value="asiatech">🏢 آسیاتک</option>
+                        <option value="mobinnet">🏢 مبین نت</option>
+                        <option value="parsOnline">🏢 پارس آنلاین</option>
+                        <option value="fanava">🏢 فناوا</option>
+                        <option value="respina">🏢 رسپینا</option>
+                        <option value="afranet">🏢 افرانت</option>
+                    </optgroup>
+                    <optgroup label="📡 سایر">
+                        <option value="datak">📡 داتک</option>
+                        <option value="zi_tel">📡 زی‌تل</option>
+                        <option value="arax">📡 آراکس</option>
+                        <option value="didehban">📡 دیده بان نت</option>
+                        <option value="tebyan">📡 تبیان</option>
+                        <option value="dorna">📡 درنا</option>
+                    </optgroup>
+                </select>
+            </div>
+
+            <div class="form-group" id="customRangeGroup" style="display:none;">
+                <label><i class="fas fa-edit"></i> رنج سفارشی</label>
+                <textarea id="customRanges" rows="4" placeholder="104.16.0.0/14&#10;172.64.0.0/13"></textarea>
+                <small class="form-hint">خالی = رنج دیفالت کلادفلر</small>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label><i class="fas fa-network-wired"></i> تعداد IP</label>
+                    <input type="number" id="ipCount" value="300" min="10" max="50000">
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-bolt"></i> همزمان</label>
+                    <input type="number" id="concurrent" value="50" min="5" max="200">
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-trophy"></i> خروجی</label>
+                    <input type="number" id="topCount" value="20" min="1" max="500">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label><i class="fas fa-sort"></i> مرتب‌سازی</label>
+                <select id="sortBy">
+                    <option value="score">⭐ امتیاز</option>
+                    <option value="ping">⚡ پینگ</option>
+                    <option value="speed">📶 سرعت</option>
+                </select>
+            </div>
+
+            <button id="startBtn" class="btn btn-primary btn-scan" onclick="startScan()">
+                <i class="fas fa-search"></i><span id="startBtnText">شروع اسکن آی‌پی تمیز</span>
+            </button>
+            <button id="stopBtn" class="btn btn-danger btn-scan" onclick="stopScan()" style="display:none;">
+                <i class="fas fa-stop"></i><span>توقف</span>
+            </button>
+        </div>
+    </section>
+
+    <!-- پیشرفت -->
+    <section class="panel" id="progressPanel" style="display:none;">
+        <div class="panel-header"><i class="fas fa-spinner fa-spin"></i><h2>در حال اسکن...</h2></div>
+        <div class="panel-body">
+            <div class="progress-bar-container"><div class="progress-bar" id="progressBar"><span id="progressText">0%</span></div></div>
+            <div class="stats-row">
+                <div class="stat-item"><i class="fas fa-globe"></i><span>اسکن: <b id="scannedCount">0</b></span></div>
+                <div class="stat-item alive"><i class="fas fa-check-circle"></i><span>زنده: <b id="aliveCount">0</b></span></div>
+                <div class="stat-item dead"><i class="fas fa-times-circle"></i><span>مرده: <b id="deadCount">0</b></span></div>
+                <div class="stat-item"><i class="fas fa-clock"></i><span>زمان: <b id="elapsedTime">0s</b></span></div>
+            </div>
+            <div class="live-log" id="liveLog"></div>
+        </div>
+    </section>
+
+    <!-- نتایج -->
+    <section class="panel" id="resultsPanel" style="display:none;">
+        <div class="panel-header">
+            <i class="fas fa-chart-bar"></i><h2>نتایج</h2>
+            <div class="panel-actions">
+                <button class="btn btn-sm btn-copy" onclick="copyAllConfigs()" id="btnCopyConfigs" style="display:none;"><i class="fas fa-copy"></i> کانفیگ‌ها</button>
+                <button class="btn btn-sm btn-copy" onclick="copyAllIPs()"><i class="fas fa-list"></i> همه IP</button>
+                <button class="btn btn-sm btn-download" onclick="downloadResults('vless')" id="btnDlVless" style="display:none;"><i class="fas fa-download"></i> VLESS</button>
+                <button class="btn btn-sm btn-download" onclick="downloadResults('ip')"><i class="fas fa-download"></i> IP</button>
+                <button class="btn btn-sm btn-download" onclick="downloadResults('json')"><i class="fas fa-download"></i> JSON</button>
+                <button class="btn btn-sm btn-telegram" onclick="sendToTelegram()"><i class="fab fa-telegram"></i> تلگرام</button>
+            </div>
+        </div>
+        <div class="panel-body">
+            <div class="results-summary" id="resultsSummary"></div>
+            <div class="table-container">
+                <table><thead><tr>
+                    <th>#</th><th>IP</th><th>Port</th><th>Ping</th><th>TLS</th><th>HTTP</th><th>Speed</th><th>Score</th><th>عملیات</th>
+                </tr></thead><tbody id="resultsBody"></tbody></table>
+            </div>
+            <div class="ip-list-section">
+                <h3><i class="fas fa-list-ol"></i> لیست آی‌پی (کپی تکی)</h3>
+                <div class="ip-list" id="ipList"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- تلگرام -->
+    <section class="panel">
+        <div class="panel-header">
+            <i class="fab fa-telegram"></i><h2>ربات تلگرام</h2>
+            <div class="panel-actions"><span id="savedBadge" class="saved-badge" style="display:none;"><i class="fas fa-check-circle"></i> ذخیره شده</span></div>
+        </div>
+        <div class="panel-body">
+            <div class="form-row">
+                <div class="form-group">
+                    <label><i class="fas fa-key"></i> توکن</label>
+                    <div class="input-with-toggle">
+                        <input type="password" id="botToken" placeholder="123456:ABC-DEF...">
+                        <button class="toggle-visibility" onclick="toggleTokenVisibility()"><i class="fas fa-eye" id="tokenEyeIcon"></i></button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-hashtag"></i> Chat ID</label>
+                    <input type="text" id="chatId" placeholder="123456789">
+                </div>
+            </div>
+            <div class="btn-row">
+                <button class="btn btn-telegram-test" onclick="testTelegram()"><i class="fas fa-plug"></i> تست</button>
+                <button class="btn btn-save" onclick="saveTelegramSettings()"><i class="fas fa-save"></i> ذخیره</button>
+                <button class="btn btn-delete-settings" onclick="deleteTelegramSettings()"><i class="fas fa-trash"></i> حذف</button>
+                <span id="telegramStatus"></span>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <a href="https://t.me/Net4All_None" target="_blank" class="footer-channel"><i class="fab fa-telegram"></i> Net4All</a>
+            <span class="footer-sep">|</span>
+            <a href="https://github.com/rohanprotapsingh" target="_blank" class="footer-github"><i class="fab fa-github"></i> rohanprotapsingh</a>
+            <span class="footer-sep">|</span>
+            <span class="footer-copy">CF Scanner &copy; 2024</span>
+        </div>
+    </footer>
+</main>
+
+<div id="toastContainer"></div>
+<script src="/static/app.js"></script>
+</body>
+</html>
